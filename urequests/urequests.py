@@ -110,6 +110,7 @@ def request(method, url, data=None, json=None, headers={}, stream=None, debug=Fa
         etag = None
         content_hmac = None
         timestamp = None
+        digest = None
         if debug: print(l)
         while True:
             l = s.readline()
@@ -121,6 +122,8 @@ def request(method, url, data=None, json=None, headers={}, stream=None, debug=Fa
                 etag = str(l).split('"')[1].rsplit('"')[0]
             if l.startswith(b"Content-HMAC:") or l.startswith(b"Content-Hmac:"):
                 content_hmac = str(l).split('"')[1].rsplit('"')[0]
+            if l.startswith(b"Digest:"):
+                digest = l.decode('utf8').split(':', 1)[1].strip()
             if not l or l == b"\r\n":
                 break
 
@@ -149,6 +152,8 @@ def request(method, url, data=None, json=None, headers={}, stream=None, debug=Fa
             resp.etag = etag
         if content_hmac:
             resp.content_hmac = content_hmac
+        if digest is not None:
+            resp.digest = digest
         return resp
     except OSError as ex:
         print('Error handling response: {}'.format(ex))
